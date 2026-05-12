@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Employee Leaderboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="bg-accent"></div>
+    <main class="page">
+      <h1>Employee Leaderboard</h1>
+
+      <section class="card" aria-label="Employee leaderboard">
+        <div class="toolbar">
+          <label class="search">
+            <span class="sr-only">Search employees</span>
+            <input id="searchInput" type="search" placeholder="Search by name..." />
+          </label>
+        </div>
+
+        <form id="employeeForm" class="form" autocomplete="off">
+          <input type="hidden" id="employeeId" />
+          <label>
+            <span>Name</span>
+            <input id="nameInput" type="text" placeholder="Employee name" required />
+          </label>
+          <label>
+            <span>Score</span>
+            <input id="scoreInput" type="number" min="0" step="1" placeholder="Score" required />
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="saveBtn">Add Employee</button>
+            <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+          </div>
+        </form>
+
+        <div class="podium" id="podium" aria-label="Top performers"></div>
+
+        <div class="table-wrap">
+          <table class="leaderboard" aria-describedby="leaderboard caption">
+            <caption class="sr-only" id="leaderboard caption">
+              Employee leaderboard with ranks
+            </caption>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Employee Name</th>
+                <th>Score</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
