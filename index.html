@@ -17,6 +17,7 @@
             <span class="sr-only">Search employees</span>
             <input id="searchInput" type="search" placeholder="Search by name..." />
           </label>
+          <button id="openWizardBtn" type="button" class="btn">Edit Employee</button>
         </div>
 
         <form id="employeeForm" class="form" autocomplete="off">
@@ -37,6 +38,32 @@
 
         <div class="podium" id="podium" aria-label="Top performers"></div>
 
+        <div class="modal" id="editWizard" aria-hidden="true">
+          <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
+            <div class="modal-header">
+              <h2 id="wizardTitle">Edit Employee</h2>
+              <button type="button" class="btn ghost" id="closeWizardBtn">Close</button>
+            </div>
+            <div class="modal-body">
+              <label>
+                <span>Select Employee</span>
+                <select id="wizardSelect"></select>
+              </label>
+              <label>
+                <span>Name</span>
+                <input id="wizardName" type="text" />
+              </label>
+              <label>
+                <span>Score</span>
+                <input id="wizardScore" type="number" min="0" step="1" />
+              </label>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn primary" id="wizardSaveBtn">Save Changes</button>
+            </div>
+          </div>
+        </div>
+
         <div class="table-wrap">
           <table class="leaderboard" aria-describedby="leaderboard caption">
             <caption class="sr-only" id="leaderboard caption">
@@ -47,7 +74,6 @@
                 <th>Rank</th>
                 <th>Employee Name</th>
                 <th>Score</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="leaderboardBody"></tbody>

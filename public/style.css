@@ -1,0 +1,618 @@
+/* Theme tokens */
+:root {
+  --bg: #070b12;
+  --bg-soft: #0f1623;
+  --card: rgba(255, 255, 255, 0.07);
+  --glass: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.14);
+  --text: #eef2f7;
+  --muted: #a8b3c2;
+  --gold: #d8b55a;
+  --silver: #b8c0cc;
+  --bronze: #c79a72;
+  --row-alt: rgba(255, 255, 255, 0.03);
+  --row-hover: rgba(255, 255, 255, 0.08);
+  --accent: #2bb0c5;
+  --danger: #ef6b6b;
+  --success: #47d18a;
+}
+
+/* Global reset */
+* {
+  box-sizing: border-box;
+}
+
+/* Base layout */
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  color: var(--text);
+  color-scheme: dark;
+  background: radial-gradient(900px 600px at 5% -10%, #1b3144, transparent),
+    radial-gradient(900px 520px at 100% 0%, #2b2348, transparent),
+    radial-gradient(700px 520px at 40% 120%, rgba(43, 176, 197, 0.18), transparent),
+    var(--bg);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.02), transparent 60%);
+  pointer-events: none;
+}
+
+/* Premium admin layout */
+body[data-page="admin"] .page-header {
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(140deg, rgba(12, 18, 28, 0.9), rgba(7, 11, 18, 0.8));
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+body[data-page="admin"] .logo-wrap {
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 16px 30px rgba(0, 0, 0, 0.35);
+}
+
+body[data-page="admin"] .logo {
+  width: min(180px, 52vw);
+  max-height: 70px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 24px rgba(12, 18, 28, 0.45));
+}
+
+body[data-page="admin"] .header-text h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  letter-spacing: 0.03em;
+}
+
+body[data-page="admin"] .page {
+  gap: 24px;
+}
+
+body[data-page="admin"] .card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+body[data-page="admin"] .card-header {
+  align-items: flex-start;
+}
+
+body[data-page="admin"] .card-header h2 {
+  font-size: 1.15rem;
+}
+
+body[data-page="admin"] .form {
+  gap: 14px;
+}
+
+body[data-page="admin"] .form input,
+body[data-page="admin"] .form select {
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body[data-page="admin"] .btn.primary {
+  background: linear-gradient(135deg, rgba(43, 176, 197, 0.35), rgba(43, 176, 197, 0.12));
+  border-color: rgba(43, 176, 197, 0.6);
+  box-shadow: 0 10px 24px rgba(43, 176, 197, 0.2);
+}
+
+body[data-page="admin"] .btn.ghost {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body[data-page="admin"] .card-footer {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Sticky header with logo */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(7, 11, 18, 0.75);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* .logo-wrap {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+} */
+
+.logo {
+  width: min(150px, 38vw);
+  height: auto;
+  filter: drop-shadow(0 8px 18px rgba(43, 176, 197, 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.header-text h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.8vw, 2.4rem);
+  letter-spacing: 0.02em;
+}
+
+.header-text {
+  flex: 1;
+}
+
+/* Leaderboard header layout */
+.leaderboard-header {
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.leaderboard-header::after {
+  content: "";
+  position: absolute;
+  inset: auto 16px 0 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(43, 176, 197, 0.5), transparent);
+}
+
+.leaderboard-header .logo-wrap {
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.leaderboard-header .logo {
+  width: 84px;
+  max-height: 42px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.leaderboard-header .header-text h1 {
+  font-size: clamp(1.2rem, 4vw, 1.9rem);
+}
+
+/* Premium tweaks for leaderboard page only */
+body[data-page="leaderboard"] .page-header {
+  background: linear-gradient(120deg, rgba(12, 18, 28, 0.85), rgba(7, 11, 18, 0.75));
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+body[data-page="leaderboard"] .logo-wrap {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+body[data-page="leaderboard"] .logo {
+  width: 70px;
+  max-height: 38px;
+  filter: drop-shadow(0 6px 12px rgba(12, 18, 28, 0.45));
+}
+
+body[data-page="leaderboard"] .header-text h1 {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+body[data-page="leaderboard"] .card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+body[data-page="leaderboard"] .card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(43, 176, 197, 0.08);
+}
+
+body[data-page="leaderboard"] .card-header h2 {
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+body[data-page="leaderboard"] .pill {
+  background: linear-gradient(135deg, rgba(43, 176, 197, 0.28), rgba(43, 176, 197, 0.08));
+  border-color: rgba(43, 176, 197, 0.55);
+}
+
+body[data-page="leaderboard"] .leaderboard thead th {
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+body[data-page="leaderboard"] .leaderboard tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body[data-page="leaderboard"] .rank-badge {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+body[data-page="leaderboard"] .search-field input {
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+}
+
+.subtle {
+  color: var(--muted);
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Content wrapper */
+.page {
+  padding: 18px 16px 48px;
+  display: grid;
+  gap: 20px;
+}
+
+/* Glassmorphism card */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+  display: grid;
+  gap: 16px;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Card header layout */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(43, 176, 197, 0.15);
+  border: 1px solid rgba(43, 176, 197, 0.4);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.leaderboard-tools {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.search-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  color: var(--text);
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.search-field input:focus {
+  border-color: rgba(43, 176, 197, 0.6);
+  box-shadow: 0 0 0 3px rgba(43, 176, 197, 0.15);
+}
+
+/* Table wrapper */
+.table-wrap {
+  overflow-x: auto;
+}
+
+/* Leaderboard table */
+.leaderboard {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.leaderboard th,
+.leaderboard td {
+  padding: 12px 10px;
+  text-align: left;
+}
+
+.leaderboard thead th {
+  color: var(--muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+
+.leaderboard tbody tr {
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.leaderboard tbody tr:nth-child(even) {
+  background: var(--row-alt);
+}
+
+.leaderboard tbody tr:hover {
+  background: var(--row-hover);
+  transform: translateY(-1px);
+}
+
+/* Rank badge styling */
+.rank-badge {
+  display: inline-flex;
+  min-width: 34px;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.rank-1 .rank-badge {
+  color: #1e1e1e;
+  background: linear-gradient(135deg, #f3d373, var(--gold));
+  box-shadow: 0 6px 16px rgba(216, 181, 90, 0.35);
+}
+
+.rank-2 .rank-badge {
+  color: #1e1e1e;
+  background: linear-gradient(135deg, #d9dee6, var(--silver));
+  box-shadow: 0 6px 16px rgba(184, 192, 204, 0.3);
+}
+
+.rank-3 .rank-badge {
+  color: #1e1e1e;
+  background: linear-gradient(135deg, #d7a07a, var(--bronze));
+  box-shadow: 0 6px 16px rgba(199, 154, 114, 0.3);
+}
+
+/* Admin form */
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.form input,
+.form select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  color: var(--text);
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.form select option {
+  background: #0f1520;
+  color: var(--text);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn.primary {
+  background: rgba(43, 176, 197, 0.2);
+  border-color: rgba(43, 176, 197, 0.5);
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+/* Empty state message */
+.empty-state {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px dashed var(--border);
+  text-align: center;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Toast message */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(20, 32, 45, 0.95);
+  border: 1px solid rgba(71, 209, 138, 0.4);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Larger screens */
+@media (min-width: 900px) {
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .card {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .logo {
+    width: min(180px, 60vw);
+  }
+
+  body[data-page="leaderboard"] {
+    font-size: 0.92rem;
+  }
+
+  body[data-page="leaderboard"] .card-header h2 {
+    font-size: 1rem;
+  }
+
+  body[data-page="leaderboard"] .leaderboard {
+    font-size: 0.88rem;
+  }
+
+  body[data-page="leaderboard"] .leaderboard th,
+  body[data-page="leaderboard"] .leaderboard td {
+    padding: 10px 8px;
+  }
+
+  body[data-page="leaderboard"] .rank-badge {
+    min-width: 30px;
+    padding: 3px 8px;
+  }
+
+  .leaderboard-header {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+  }
+
+  .leaderboard-header .logo {
+    width: 72px;
+    max-height: 36px;
+  }
+
+  .leaderboard-header .header-text h1 {
+    font-size: 1.15rem;
+  }
+
+  body[data-page="admin"] .logo {
+    width: min(200px, 64vw);
+  }
+
+  body {
+    font-size: 0.88rem;
+  }
+
+  .header-text h1 {
+    font-size: 1.2rem;
+  }
+
+  .card-header h2 {
+    font-size: 0.98rem;
+  }
+
+  .subtle {
+    font-size: 0.8rem;
+  }
+
+  .pill {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .leaderboard {
+    font-size: 0.86rem;
+  }
+
+  .leaderboard th,
+  .leaderboard td {
+    padding: 10px 8px;
+  }
+
+  .rank-badge {
+    min-width: 28px;
+    padding: 3px 8px;
+    font-size: 0.8rem;
+  }
+
+  .search-field input,
+  .form input,
+  .form select {
+    font-size: 0.85rem;
+    padding: 9px 10px;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+    padding: 9px 12px;
+  }
+
+  .leaderboard-tools {
+    margin-top: 2px;
+  }
+}

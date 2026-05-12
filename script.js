@@ -3,6 +3,13 @@ const apiBase = "/api/employees";
 const leaderboardBody = document.getElementById("leaderboardBody");
 const podium = document.getElementById("podium");
 const searchInput = document.getElementById("searchInput");
+const openWizardBtn = document.getElementById("openWizardBtn");
+const editWizard = document.getElementById("editWizard");
+const closeWizardBtn = document.getElementById("closeWizardBtn");
+const wizardSelect = document.getElementById("wizardSelect");
+const wizardName = document.getElementById("wizardName");
+const wizardScore = document.getElementById("wizardScore");
+const wizardSaveBtn = document.getElementById("wizardSaveBtn");
 const employeeForm = document.getElementById("employeeForm");
 const employeeId = document.getElementById("employeeId");
 const nameInput = document.getElementById("nameInput");
@@ -36,13 +43,39 @@ function resetForm() {
   setFormMode(false);
 }
 
-function createActionButton(label, className, onClick) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = `action-btn ${className}`.trim();
-  button.textContent = label;
-  button.addEventListener("click", onClick);
-  return button;
+function setWizardOpen(isOpen) {
+  editWizard.classList.toggle("is-open", isOpen);
+  editWizard.setAttribute("aria-hidden", String(!isOpen));
+}
+
+function populateWizard() {
+  wizardSelect.innerHTML = "";
+  const sorted = sortByScore(employees);
+
+  sorted.forEach((employee) => {
+    const option = document.createElement("option");
+    option.value = employee.id;
+    option.textContent = `${employee.name} (Score: ${employee.score})`;
+    wizardSelect.appendChild(option);
+  });
+
+  if (sorted.length) {
+    wizardSelect.value = sorted[0].id;
+    wizardName.value = sorted[0].name;
+    wizardScore.value = sorted[0].score;
+  } else {
+    wizardName.value = "";
+    wizardScore.value = "";
+  }
+}
+
+function updateWizardFields(id) {
+  const employee = employees.find((emp) => emp.id === id);
+  if (!employee) {
+    return;
+  }
+  wizardName.value = employee.name;
+  wizardScore.value = employee.score;
 }
 
 function renderPodium() {
@@ -94,10 +127,6 @@ function renderLeaderboard() {
       return;
     }
 
-    if (rank <= 3) {
-      row.classList.add(`rank-${rank}`);
-    }
-
     const rankCell = document.createElement("td");
     const rankBadge = document.createElement("span");
     rankBadge.className = "rank-badge";
@@ -112,12 +141,7 @@ function renderLeaderboard() {
     scoreCell.dataset.score = String(employee.score);
     scoreCell.textContent = String(employee.score);
 
-    const actionCell = document.createElement("td");
-    const editBtn = createActionButton("Edit", "", () => startEdit(employee));
-    const deleteBtn = createActionButton("Delete", "danger", () => deleteEmployee(employee.id));
-    actionCell.append(editBtn, deleteBtn);
-
-    row.append(rankCell, nameCell, scoreCell, actionCell);
+    row.append(rankCell, nameCell, scoreCell);
     leaderboardBody.appendChild(row);
   });
 }
@@ -184,6 +208,32 @@ cancelBtn.addEventListener("click", () => {
 
 searchInput.addEventListener("input", () => {
   renderLeaderboard();
+});
+
+openWizardBtn.addEventListener("click", () => {
+  populateWizard();
+  setWizardOpen(true);
+});
+
+closeWizardBtn.addEventListener("click", () => {
+  setWizardOpen(false);
+});
+
+wizardSelect.addEventListener("change", (event) => {
+  updateWizardFields(event.target.value);
+});
+
+wizardSaveBtn.addEventListener("click", async () => {
+  const id = wizardSelect.value;
+  const name = wizardName.value.trim();
+  const score = Number(wizardScore.value);
+
+  if (!id || !name || Number.isNaN(score)) {
+    return;
+  }
+
+  await updateEmployee(id, { name, score });
+  setWizardOpen(false);
 });
 
 loadEmployees();

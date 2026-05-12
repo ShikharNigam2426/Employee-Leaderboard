@@ -1,24 +1,33 @@
 # Employee Leaderboard
 
-A clean, modern employee leaderboard with a podium-style top 3, CRUD actions, and a dark glassmorphism UI. Data is stored in a local JSON file through a simple Node server.
+Modern, mobile-first leaderboard web app for internship employee rankings. Data is stored in local JSON files and updated via CSV uploads.
 
 ## Features
-- Podium for top 3 (Champion, 1st Runner-up, 2nd Runner-up)
-- Leaderboard table starts from rank 4
-- Add, edit, delete employees
-- Search by name
-- Responsive dark UI with hover effects and rounded cards
+- Separate leaderboards for Tenured RM, New RM, and BSM
+- Hidden hash-based URLs for each role
+- CSV upload admin panel with success toast
+- Last updated timestamp and empty state
+- Premium dark UI with glassmorphism and sticky header
 
 ## Tech Stack
+- Node.js
+- Express.js
 - HTML, CSS, Vanilla JavaScript
-- Node.js (built-in http + fs)
+- Multer for CSV uploads
 
-## Run Locally
+## Project Routes
+- /tenured-rm/a8x92kd7q1
+- /new-rm/kd82js9a0x
+- /bsm/91ksla8x2q
+- /admin-edit
+
+## Local Setup
 ```bash
-cd "C:\Users\Acer\Desktop\POS Image"
-node server.js
+npm install
+npm start
 ```
 Open http://localhost:3000
 
 ## Notes
-On free hosting, JSON file storage can be ephemeral. For persistent data, use a database or a persistent disk.
+- Place your logo at public/logo.png
+- JSON files are stored in the data/ folder

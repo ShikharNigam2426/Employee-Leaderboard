@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Edit</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body data-page="admin">
+
+    <header class="page-header">
+      <h1 class="header-title">Admin Edit</h1>
+    </header>
+
+    <main class="page">
+      <section class="card">
+
+        <div class="card-header">
+          <div>
+            <h2>Update Leaderboard</h2>
+            <p class="subtle">CSV format: name,marks</p>
+          </div>
+          <button type="button" class="btn ghost" id="clearBtn">Clear Leaderboard</button>
+        </div>
+
+        <form id="uploadForm" class="form" autocomplete="off">
+          <label>
+            <span>Select Role</span>
+            <select id="roleSelect" required>
+              <option value="tenured-rm">Tenured RM</option>
+              <option value="new-rm">New RM</option>
+              <option value="bsm">BSM</option>
+            </select>
+          </label>
+          <label>
+            <span>CSV File</span>
+            <input id="csvInput" type="file" accept=".csv" required />
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn primary">Upload Ranking</button>
+          </div>
+        </form>
+
+        <div class="card-footer">
+          <span class="subtle">Last updated: <span id="adminUpdated">--</span></span>
+        </div>
+
+      </section>
+    </main>
+
+    <div class="toast" id="toast" aria-live="polite"></div>
+
+    <script src="/script.js"></script>
+  </body>
+</html>
