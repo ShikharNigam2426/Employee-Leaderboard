@@ -3,13 +3,15 @@ const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
+const mongoUri = process.env.MONGO_URI;
+
 // Store uploads in memory for quick CSV parsing.
 const upload = multer({ storage: multer.memoryStorage() });
 
-const dataDir = path.join(__dirname, "data");
 const viewsDir = path.join(__dirname, "views");
 const publicDir = path.join(__dirname, "public");
 
@@ -20,84 +22,187 @@ const roles = {
   bsm: { title: "BSM", tag: "BSM", hash: "91ksla8x2q" },
 };
 
-// Resolve data file path for a given role.
-const getDataPath = (role) => path.join(dataDir, `${role}.json`);
+// MongoDB client and database connection
+let db = null;
 
-// Ensure the data directory exists on boot.
-const ensureDataFolder = () => {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-};
-
-// Normalize entries: sort by score and regenerate ranks.
-const normalizeEntries = (entries) => {
-  return [...entries]
-    .filter((entry) => entry && entry.name)
-    .map((entry) => ({
-      name: String(entry.name).trim(),
-      score: Number(entry.score) || 0,
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((entry, index) => ({
-      rank: index + 1,
-      name: entry.name,
-      score: entry.score,
-    }));
-};
-
-// Read a role JSON file safely.
-const readDataFile = (role) => {
-  const filePath = getDataPath(role);
-  if (!fs.existsSync(filePath)) {
-    return [];
-  }
-  const raw = fs.readFileSync(filePath, "utf-8");
+const connectToMongo = async () => {
   try {
-    return normalizeEntries(JSON.parse(raw));
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    db = client.db("leaderboard");
+    console.log("Connected to MongoDB successfully!");
+    return db;
   } catch (error) {
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
+  }
+};
+
+const toNumberOrString = (value) => {
+  if (value === undefined || value === null || value === "") {
+    return "";
+  }
+  const asNumber = Number(value);
+  return Number.isNaN(asNumber) ? String(value).trim() : asNumber;
+};
+
+const normalizeRankedEntries = (entries) => {
+  const cleaned = entries
+    .filter((entry) => entry && entry.name)
+    .map((entry, index) => {
+      const rankValue = Number(entry.rank);
+      return {
+        ...entry,
+        name: String(entry.name).trim(),
+        teamName: entry.teamName ? String(entry.teamName).trim() : "",
+        rank: Number.isNaN(rankValue) ? index + 1 : rankValue,
+      };
+    });
+
+  return cleaned.sort((a, b) => a.rank - b.rank);
+};
+
+// Get leaderboard entries from MongoDB.
+const getLeaderboardEntries = async (role) => {
+  try {
+    const collection = db.collection(role);
+    const entries = await collection
+      .find({ _id: { $ne: "metadata" } })
+      .sort({ rank: 1 })
+      .toArray();
+    return normalizeRankedEntries(entries);
+  } catch (error) {
+    console.error("Error fetching leaderboard entries:", error);
     return [];
   }
 };
 
-// Write role data to disk.
-const writeDataFile = (role, data) => {
-  const filePath = getDataPath(role);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-};
-
-// Get file modified time for last updated timestamps.
-const getUpdatedAt = (role) => {
-  const filePath = getDataPath(role);
-  if (!fs.existsSync(filePath)) {
+// Get the last update time for a role.
+const getUpdatedAt = async (role) => {
+  try {
+    const collection = db.collection(role);
+    const metadata = await collection.findOne({ _id: "metadata" });
+    return metadata ? metadata.updatedAt : null;
+  } catch (error) {
     return null;
   }
-  const stats = fs.statSync(filePath);
-  return stats.mtime.toISOString();
+};
+
+// Update the last update time for a role.
+const updateMetadata = async (role) => {
+  try {
+    const collection = db.collection(role);
+    await collection.updateOne(
+      { _id: "metadata" },
+      { $set: { updatedAt: new Date().toISOString() } },
+      { upsert: true }
+    );
+  } catch (error) {
+    console.error("Error updating metadata:", error);
+  }
+};
+
+// Clear all entries for a role (keep metadata).
+const clearLeaderboard = async (role) => {
+  try {
+    const collection = db.collection(role);
+    await collection.deleteMany({ _id: { $ne: "metadata" } });
+    await updateMetadata(role);
+  } catch (error) {
+    console.error("Error clearing leaderboard:", error);
+  }
+};
+
+// Save leaderboard entries to MongoDB.
+const saveLeaderboardEntries = async (role, entries) => {
+  try {
+    const collection = db.collection(role);
+    // Clear existing entries (but not metadata)
+    await collection.deleteMany({ _id: { $ne: "metadata" } });
+    
+    // Insert new entries
+    if (entries.length > 0) {
+      await collection.insertMany(
+        entries.map((entry) => ({
+          rank: entry.rank,
+          teamName: entry.teamName || "",
+          name: entry.name,
+          hotLeadPerRm: entry.hotLeadPerRm ?? "",
+          loginActiveRmPct: entry.loginActiveRmPct ?? "",
+          jvPerNewRm: entry.jvPerNewRm ?? "",
+          hotLead: entry.hotLead ?? "",
+          login: entry.login ?? "",
+          fd: entry.fd ?? "",
+        }))
+      );
+    }
+    
+    // Update metadata
+    await updateMetadata(role);
+  } catch (error) {
+    console.error("Error saving leaderboard entries:", error);
+  }
 };
 
 // Parse CSV content and convert into ranked entries.
-const parseCsvBuffer = (buffer) => {
-  const raw = buffer.toString("utf-8");
+const normalizeHeader = (header) => header.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const parseCsvBuffer = (buffer, role) => {
+  const raw = buffer.toString("utf-8").replace(/^\uFEFF/, "").trim();
   const lines = raw.split(/\r?\n/).filter((line) => line.trim());
-  const entries = lines
-    .map((line) => {
-      const [name, marks] = line.split(",");
-      if (!name || !marks) {
+  if (!lines.length) {
+    return [];
+  }
+
+  console.log(`[CSV Parse] Role: ${role}, Total lines: ${lines.length}`);
+  const headerCells = lines[0].split(",").map((cell) => cell.trim());
+  const hasHeader = headerCells.some((cell) => /[a-zA-Z]/.test(cell));
+  console.log(`[CSV Parse] Headers: ${hasHeader ? "detected" : "not detected"}`, headerCells.slice(0, 3));
+
+  const headerMap = hasHeader
+    ? headerCells.map((cell) => normalizeHeader(cell))
+    : [];
+
+  const dataLines = hasHeader ? lines.slice(1) : lines;
+
+  const entries = dataLines
+    .map((line, index) => {
+      const cells = line.split(",").map((cell) => cell.trim());
+      if (!cells.length) {
         return null;
       }
-      const score = Number(marks.trim());
-      if (Number.isNaN(score)) {
-        return null;
-      }
-      return {
-        name: name.trim(),
-        score,
+
+      const getValue = (aliases) => {
+        if (!hasHeader) {
+          return null;
+        }
+        const matchIndex = headerMap.findIndex((key) => aliases.includes(key));
+        return matchIndex >= 0 ? cells[matchIndex] : "";
       };
+
+      const getPositional = (pos) => (cells[pos] ? cells[pos] : "");
+
+      const entry = {
+        rank: getValue(["rank", "sr", "sno", "#"]) || getPositional(0) || index + 1,
+        teamName: getValue(["teamname", "team", "teamdetails", "bsmdetails"]) || getPositional(1) || "",
+        name: getValue(["name", "rmname", "bsmname"]) || getPositional(2) || "",
+        hotLeadPerRm: toNumberOrString(getValue(["hotleadperrm", "hotleadperrm%", "hotleadper"]) || getPositional(3) || ""),
+        loginActiveRmPct: toNumberOrString(getValue(["loginsactiverm%", "loginactiverm%", "loginsactiverm", "loginsactive"]) || getPositional(4) || ""),
+        jvPerNewRm: toNumberOrString(getValue(["jvpernewrm", "jvpernew"]) || getPositional(5) || ""),
+        hotLead: toNumberOrString(getValue(["hotlead", "hotleads"]) || getPositional(3) || ""),
+        login: toNumberOrString(getValue(["login", "logins"]) || getPositional(4) || ""),
+        fd: toNumberOrString(getValue(["fd", "fds"]) || getPositional(5) || ""),
+      };
+
+      if (!entry.name) {
+        return null;
+      }
+
+      return entry;
     })
     .filter(Boolean);
 
-  return normalizeEntries(entries);
+  return normalizeRankedEntries(entries);
 };
 
 // Very small template helper for HTML placeholders.
@@ -138,22 +243,23 @@ app.get("/:role/:hash", (req, res) => {
 });
 
 // Fetch leaderboard entries for a role.
-app.get("/api/leaderboard/:role", (req, res) => {
+app.get("/api/leaderboard/:role", async (req, res) => {
   const role = req.params.role;
   if (!roles[role]) {
     res.status(400).json({ error: "Invalid role" });
     return;
   }
 
-  const entries = readDataFile(role);
+  const entries = await getLeaderboardEntries(role);
+  const updatedAt = await getUpdatedAt(role);
   res.json({
-    updatedAt: getUpdatedAt(role),
+    updatedAt,
     entries,
   });
 });
 
 // Upload CSV and overwrite role data.
-app.post("/api/upload", upload.single("csv"), (req, res) => {
+app.post("/api/upload", upload.single("csv"), async (req, res) => {
   const role = req.body.role;
   if (!roles[role]) {
     res.status(400).json({ error: "Invalid role" });
@@ -165,30 +271,46 @@ app.post("/api/upload", upload.single("csv"), (req, res) => {
     return;
   }
 
-  const entries = parseCsvBuffer(req.file.buffer);
-  writeDataFile(role, entries);
+  try {
+    const entries = parseCsvBuffer(req.file.buffer, role);
+    if (!entries.length) {
+      res.status(400).json({ error: "No valid rows found in the CSV." });
+      return;
+    }
 
-  res.json({
-    updatedAt: getUpdatedAt(role),
-    entries,
-  });
+    console.log(`Uploading ${entries.length} rows for ${role}`);
+    await saveLeaderboardEntries(role, entries);
+
+    const updatedAt = await getUpdatedAt(role);
+    res.json({
+      updatedAt,
+      entries,
+    });
+  } catch (error) {
+    console.error("Upload failed:", error);
+    res.status(500).json({ error: "Upload failed. Please try again." });
+  }
 });
 
 // Clear a leaderboard.
-app.post("/api/clear", (req, res) => {
+app.post("/api/clear", async (req, res) => {
   const role = req.body.role;
   if (!roles[role]) {
     res.status(400).json({ error: "Invalid role" });
     return;
   }
 
-  writeDataFile(role, []);
-  res.json({ updatedAt: getUpdatedAt(role), entries: [] });
+  await clearLeaderboard(role);
+  const updatedAt = await getUpdatedAt(role);
+  res.json({ updatedAt, entries: [] });
 });
 
-// Ensure data folder exists on startup.
-ensureDataFolder();
+// Start server and connect to MongoDB
+const startServer = async () => {
+  await connectToMongo();
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+};
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+startServer();

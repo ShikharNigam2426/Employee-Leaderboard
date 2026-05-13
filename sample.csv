@@ -1,6 +1,6 @@
-name,marks
-Rahul,98
-Aman,76
-Priya,88
-Neha,91
-Kabir,82
+rank,team name,name,hot lead per RM,logins active RM%,jv per new RM
+1,BORIVALI_MOD1,Yogendra Bachula,0.67,50,1.17
+2,THANE_MOD2,Neha Sharma,0.58,46,1.04
+3,ANDHERI_MOD3,Priya Singh,0.52,44,0.98
+4,NERUL_MOD4,Kabir Mehta,0.49,41,0.92
+5,VIDYAVIHAR_MOD5,Aman Patel,0.44,38,0.88

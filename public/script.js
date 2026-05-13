@@ -13,6 +13,41 @@ const formatDateTime = (iso) => {
   return date.toLocaleString();
 };
 
+// Format current date for dashboard
+const formatCurrentDate = () => {
+  const options = { day: 'numeric', month: 'long', year: 'numeric' };
+  return new Date().toLocaleDateString('en-US', options);
+};
+
+// Format month-year for dashboard title
+const formatMonthYear = () => {
+  const options = { month: 'short', year: 'numeric' };
+  return new Date().toLocaleDateString('en-US', options);
+};
+
+const roleColumns = {
+  "bsm": [
+    { key: "rank", label: "#", className: "col-rank" },
+    { key: "name", label: "NAME", className: "col-name" },
+    { key: "hotLeadPerRm", label: "HOT LEAD PER RM", className: "col-metric" },
+    { key: "loginActiveRmPct", label: "LOGINS ACTIVE RM%", className: "col-metric" },
+    { key: "jvPerNewRm", label: "JV PER NEW RM", className: "col-metric" },
+  ],
+  "tenured-rm": [
+    { key: "rank", label: "#", className: "col-rank" },
+    { key: "name", label: "NAME", className: "col-name" },
+    { key: "hotLead", label: "HOT LEAD", className: "col-metric" },
+    { key: "login", label: "LOGIN", className: "col-metric" },
+    { key: "fd", label: "FD", className: "col-metric" },
+  ],
+  "new-rm": [
+    { key: "rank", label: "#", className: "col-rank" },
+    { key: "name", label: "NAME", className: "col-name" },
+    { key: "login", label: "LOGIN", className: "col-metric" },
+    { key: "hotLead", label: "HOT LEAD", className: "col-metric" },
+  ],
+};
+
 // Show a small success/error toast on the admin page.
 const showToast = (message) => {
   const toast = document.getElementById("toast");
@@ -24,31 +59,73 @@ const showToast = (message) => {
   setTimeout(() => toast.classList.remove("show"), 2500);
 };
 
+const buildTableHead = (role) => {
+  const headRow = document.getElementById("leaderboardHead");
+  if (!headRow) {
+    return;
+  }
+  headRow.innerHTML = "";
+  const columns = roleColumns[role] || [];
+  columns.forEach((column) => {
+    const th = document.createElement("th");
+    if (column.className) {
+      th.className = column.className;
+    }
+    th.textContent = column.label;
+    headRow.appendChild(th);
+  });
+};
+
 // Render leaderboard rows with top-3 highlights.
-const renderRows = (rows) => {
+const renderRows = (rows, role) => {
   const tbody = document.getElementById("leaderboardBody");
   if (!tbody) {
     return;
   }
   tbody.innerHTML = "";
 
+  const columns = roleColumns[role] || [];
+
   rows.forEach((entry) => {
     const row = document.createElement("tr");
     row.classList.add(`rank-${entry.rank}`);
 
-    const rankCell = document.createElement("td");
-    const badge = document.createElement("span");
-    badge.className = "rank-badge";
-    badge.textContent = entry.rank;
-    rankCell.appendChild(badge);
+    columns.forEach((column) => {
+      const cell = document.createElement("td");
+      if (column.className) {
+        cell.className = column.className;
+      }
 
-    const nameCell = document.createElement("td");
-    nameCell.textContent = entry.name;
+      if (column.key === "rank") {
+        const badge = document.createElement("span");
+        badge.className = "rank-badge";
+        badge.textContent = entry.rank ?? "--";
+        cell.appendChild(badge);
+      } else if (column.key === "name") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "name-stack";
 
-    const scoreCell = document.createElement("td");
-    scoreCell.textContent = entry.score;
+        const main = document.createElement("div");
+        main.className = "name-main";
+        main.textContent = entry.name || "--";
 
-    row.append(rankCell, nameCell, scoreCell);
+        wrapper.appendChild(main);
+
+        if (entry.teamName) {
+          const sub = document.createElement("div");
+          sub.className = "name-sub";
+          sub.textContent = entry.teamName;
+          wrapper.appendChild(sub);
+        }
+
+        cell.appendChild(wrapper);
+      } else {
+        const value = entry[column.key];
+        cell.textContent = value === undefined || value === null || value === "" ? "--" : value;
+      }
+
+      row.appendChild(cell);
+    });
     tbody.appendChild(row);
   });
 };
@@ -63,7 +140,7 @@ const applySearchFilter = () => {
     ? leaderboardEntries.filter((entry) => entry.name.toLowerCase().includes(query))
     : leaderboardEntries;
 
-  renderRows(filtered);
+  renderRows(filtered, document.body.dataset.role);
 
   if (searchEmpty) {
     searchEmpty.hidden = filtered.length > 0 || !query;
@@ -124,6 +201,18 @@ const updateAdminTimestamp = async () => {
 
 // Leaderboard page init.
 if (page === "leaderboard") {
+  // Set dashboard dates
+  const dateDisplay = document.getElementById("currentDate");
+  if (dateDisplay) {
+    dateDisplay.textContent = formatCurrentDate();
+  }
+  
+  const dashboardTitle = document.querySelector(".dashboard-title");
+  if (dashboardTitle) {
+    dashboardTitle.textContent = `Daily Leaderboard | ${formatMonthYear()}`;
+  }
+
+  buildTableHead(document.body.dataset.role);
   updateLeaderboard();
   // Refresh often to reflect admin CSV uploads.
   setInterval(updateLeaderboard, 5000);
@@ -170,9 +259,19 @@ if (page === "admin") {
       showToast("Leaderboard updated successfully.");
       csvInput.value = "";
       updateAdminTimestamp();
-    } else {
-      showToast("Upload failed. Please check the CSV format.");
+      return;
     }
+
+    let message = "Upload failed. Please check the CSV format.";
+    try {
+      const payload = await response.json();
+      if (payload && payload.error) {
+        message = payload.error;
+      }
+    } catch (error) {
+      // Ignore JSON parse errors.
+    }
+    showToast(message);
   });
 
   clearBtn.addEventListener("click", async () => {

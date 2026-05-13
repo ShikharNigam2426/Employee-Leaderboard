@@ -7,49 +7,52 @@
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body data-page="leaderboard" data-role="{{ROLE_SLUG}}">
-    <!-- Sticky header with logo -->
-    <header class="page-header leaderboard-header">
-      <div class="logo-wrap">
-        <img src="/logo.png" alt="Client logo" class="logo" />
+    <!-- Top Dashboard Header -->
+    <div class="dashboard-top-header">
+      <div class="top-left">
+        <h1 class="dashboard-title">Daily Dashboard</h1>
       </div>
-      <div class="header-text">
-        <h1>{{ROLE_TITLE}}</h1>
+      <div class="top-right">
+        <span class="date-badge" id="currentDate">13 May 2026</span>
       </div>
-    </header>
+    </div>
 
     <!-- Main leaderboard card -->
     <main class="page">
       <section class="card">
-        <div class="card-header">
-          <div>
-            <h2>Leaderboard</h2>
-            <p class="subtle">Updated: <span id="lastUpdated">--</span></p>
+        <!-- Role Info Header -->
+        <div class="role-info-header">
+          <div class="role-title-group">
+            <span class="role-icon">📊</span>
+            <h2 class="role-title">{{ROLE_TAG}}</h2>
           </div>
-          <span class="pill">{{ROLE_TAG}}</span>
+          <div class="card-header-images">
+            <div class="card-header-box">
+              <img src="/pragati.png" alt="Pragati Logo" class="card-header-img" />
+            </div>
+          </div>
         </div>
-
+        
         <div class="leaderboard-tools">
+          <p class="scroll-note">Scroll to view all details</p>
           <label class="search-field">
             <span class="sr-only">Search employee name</span>
-            <input id="leaderboardSearch" type="search" placeholder="Search employee name" />
+            <input id="leaderboardSearch" type="search" placeholder="🔍 Search employee name" />
           </label>
           <p id="searchEmpty" class="subtle" hidden>No matching names found.</p>
         </div>
 
+
         <div id="emptyState" class="empty-state" hidden>
           <p>No leaderboard data yet.</p>
-          <p class="subtle">Ask you admin to update your rankings.</p>
+          <p class="subtle">Ask your admin to update your rankings.</p>
         </div>
 
         <!-- Leaderboard table -->
         <div class="table-wrap" id="leaderboardWrap">
           <table class="leaderboard">
             <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Employee Name</th>
-                <th>Score</th>
-              </tr>
+              <tr id="leaderboardHead"></tr>
             </thead>
             <tbody id="leaderboardBody"></tbody>
           </table>
