@@ -24,18 +24,39 @@ const roles = {
 
 // MongoDB client and database connection
 let db = null;
+let mongoClient = null;
+let mongoRetryTimeout = null;
 
 const connectToMongo = async () => {
+  if (!mongoUri) {
+    console.error("MONGO_URI is not set. Skipping MongoDB connection.");
+    return null;
+  }
+
   try {
-    const client = new MongoClient(mongoUri);
-    await client.connect();
-    db = client.db("leaderboard");
+    if (!mongoClient) {
+      mongoClient = new MongoClient(mongoUri);
+    }
+    await mongoClient.connect();
+    db = mongoClient.db("leaderboard");
     console.log("Connected to MongoDB successfully!");
     return db;
   } catch (error) {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
+    console.error("MongoDB connection error:", error.message || error);
+    db = null;
+    scheduleMongoRetry();
+    return null;
   }
+};
+
+const scheduleMongoRetry = () => {
+  if (mongoRetryTimeout) {
+    return;
+  }
+  mongoRetryTimeout = setTimeout(() => {
+    mongoRetryTimeout = null;
+    connectToMongo();
+  }, 10000);
 };
 
 const toNumberOrString = (value) => {
@@ -64,6 +85,9 @@ const normalizeRankedEntries = (entries) => {
 
 // Get leaderboard entries from MongoDB.
 const getLeaderboardEntries = async (role) => {
+  if (!db) {
+    return [];
+  }
   try {
     const collection = db.collection(role);
     const entries = await collection
@@ -79,6 +103,9 @@ const getLeaderboardEntries = async (role) => {
 
 // Get the last update time for a role.
 const getUpdatedAt = async (role) => {
+  if (!db) {
+    return null;
+  }
   try {
     const collection = db.collection(role);
     const metadata = await collection.findOne({ _id: "metadata" });
@@ -90,6 +117,9 @@ const getUpdatedAt = async (role) => {
 
 // Update the last update time for a role.
 const updateMetadata = async (role) => {
+  if (!db) {
+    return;
+  }
   try {
     const collection = db.collection(role);
     await collection.updateOne(
@@ -104,6 +134,9 @@ const updateMetadata = async (role) => {
 
 // Clear all entries for a role (keep metadata).
 const clearLeaderboard = async (role) => {
+  if (!db) {
+    return;
+  }
   try {
     const collection = db.collection(role);
     await collection.deleteMany({ _id: { $ne: "metadata" } });
@@ -115,6 +148,9 @@ const clearLeaderboard = async (role) => {
 
 // Save leaderboard entries to MongoDB.
 const saveLeaderboardEntries = async (role, entries) => {
+  if (!db) {
+    return;
+  }
   try {
     const collection = db.collection(role);
     // Clear existing entries (but not metadata)
@@ -250,6 +286,11 @@ app.get("/api/leaderboard/:role", async (req, res) => {
     return;
   }
 
+  if (!db) {
+    res.status(503).json({ error: "Database unavailable. Please try again shortly." });
+    return;
+  }
+
   const entries = await getLeaderboardEntries(role);
   const updatedAt = await getUpdatedAt(role);
   res.json({
@@ -263,6 +304,11 @@ app.post("/api/upload", upload.single("csv"), async (req, res) => {
   const role = req.body.role;
   if (!roles[role]) {
     res.status(400).json({ error: "Invalid role" });
+    return;
+  }
+
+  if (!db) {
+    res.status(503).json({ error: "Database unavailable. Please try again shortly." });
     return;
   }
 
@@ -300,6 +346,11 @@ app.post("/api/clear", async (req, res) => {
     return;
   }
 
+  if (!db) {
+    res.status(503).json({ error: "Database unavailable. Please try again shortly." });
+    return;
+  }
+
   await clearLeaderboard(role);
   const updatedAt = await getUpdatedAt(role);
   res.json({ updatedAt, entries: [] });
@@ -307,10 +358,10 @@ app.post("/api/clear", async (req, res) => {
 
 // Start server and connect to MongoDB
 const startServer = async () => {
-  await connectToMongo();
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
+  await connectToMongo();
 };
 
 startServer();
